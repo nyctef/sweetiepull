@@ -99,6 +99,11 @@ var processMessage = function(obj) {
     rclient.incr(mkKey(obj, 'lunabehs'));
   }
 
+  // track popularity of emotes
+  (obj.message.match(/:[a-z0-9]+:/g) || []).forEach(function(emote) {
+    rclient.hincrby(mkKey(obj, 'emotes'), emote, 1);
+  });
+
   // track count of sweetiebutt replies
   if (obj.speaker.match(/^sweetieb/i)) {
     rclient.incr(mkKey(obj, 'sweetreply'));
