@@ -42,6 +42,7 @@ var callback = function(err, message) {
       setTimeout(function() {
         askForNext();
       }, 5000);
+      return;
     }
     log("Error on subscription: "+err);
     throw err;
