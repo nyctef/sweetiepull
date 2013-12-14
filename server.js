@@ -39,13 +39,11 @@ var callback = function(err, message) {
   if (err) {
     if (err == 'No messages to receive') {
       log(err);
-      setTimeout(function() {
-        askForNext();
-      }, 5000);
+      setTimeout(askForNext, 5000);
       return;
     }
     log("Error on subscription: "+err);
-    throw err;
+    setTimeout(askForNext, 60*1000);
     return;
   }
 
