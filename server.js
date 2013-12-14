@@ -97,6 +97,7 @@ var processMessage = function(obj) {
   // track count of lunabehs
   if (obj.message.match(/:lunabeh:/)) {
     rclient.incr(mkKey(obj, 'lunabehs'));
+    rclient.hincrby(mkKey(obj, 'lunabehsBySpeaker'), obj.speaker, 1);
   }
 
   // track popularity of emotes
