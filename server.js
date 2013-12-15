@@ -177,6 +177,7 @@ var top = function(num, dict) {
 
   var result = {};
   for (var i=0; i<num; i++) {
+    if (!sortable[i]) break;
     result[sortable[i][0]] = sortable[i][1];
   }
 
