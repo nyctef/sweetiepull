@@ -8,8 +8,17 @@ var moment = require('moment');
 
 
 http.createServer(function (req, res) {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.end('Hello World\n');
+  res.writeHead(200, {'Content-Type': 'application/json'});
+  getResults(function(err, results) {
+    var obj;
+    if (err) {
+      obj = { error: err };
+    }
+    else {
+      obj = results;
+    }
+    res.end(JSON.stringify(obj, null, " "));
+  });
 }).listen(3000, "127.0.0.1");
 console.log('Server running at http://127.0.0.1:3000/');
 
@@ -125,3 +134,52 @@ var processMessage = function(obj) {
   // track number of messages per hour of day
   rclient.hincrby(mkKey(obj, 'byHOD'), date.hour(), 1);
 }
+
+var getResults = function(callback) {
+ var obj = {room:'general', server:'conference.friendshipismagicsquad.com'};
+ rclient.multi()
+   .lrange(mkKey(obj,'tail'), 0, 99)
+   .get(mkKey(obj, 'lunabehs'))
+   .hgetall(mkKey(obj, 'lunabehsBySpeaker'))
+   .hgetall(mkKey(obj, 'emotes'))
+   .get(mkKey(obj, 'sweetreply'))
+   .get(mkKey(obj, 'sweetping'))
+   .hgetall(mkKey(obj, 'bySpeaker'))
+   .hgetall(mkKey(obj, 'byHOD'))
+   .get(mkKey(obj, 'total'))
+   .exec(function(err, replies) {
+     if (err) {
+       callback(err);
+     }
+     else {
+      var result = {
+        tail: replies[0],
+        lunabehs: replies[1],
+        lunabehsBySpeaker: top(10, replies[2]),
+        emotes: top(10, replies[3]),
+        sweetreply: replies[4],
+        sweetping: replies[5],
+        bySpeaker: top(10, replies[6]),
+        byHOD: replies[7],
+        total: replies[8],
+      };
+      callback(false, result);
+     }
+   })
+}
+
+var top = function(num, dict) {
+  var sortable = [];
+  for (var item in dict) {
+    sortable.push([item, dict[item]]);
+  }
+  sortable.sort(function(a, b) {return b[1] - a[1];});
+
+  var result = {};
+  for (var i=0; i<num; i++) {
+    result[sortable[i][0]] = sortable[i][1];
+  }
+
+  return result;
+}
+
