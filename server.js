@@ -93,7 +93,12 @@ var processMessage = function(obj) {
   }
 
   // track the last n messages
-  rclient.lpush(mkKey(obj, 'tail'), obj.speaker +': '+obj.message);
+  if (obj.message.indexOf("/me ") == 0) {
+    rclient.lpush(mkKey(obj, 'tail'), '*** '+obj.speaker +' ' +obj.message.substring(4));
+  }
+  else {
+    rclient.lpush(mkKey(obj, 'tail'), obj.speaker +': '+obj.message);
+  }
   rclient.ltrim(mkKey(obj, 'tail'), 0, 30);
 
   var date = moment(obj.timestamp);
