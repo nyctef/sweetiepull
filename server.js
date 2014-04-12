@@ -73,7 +73,8 @@ var process = function(msg) {
     return;
   }
 
-  processMessage(obj);
+  if (obj.message) processMessage(obj);
+  if (obj.deowl) processDeowl(obj);
 }
 
 var mkKey = function(obj, postfix) {
@@ -140,6 +141,14 @@ var processMessage = function(obj) {
   rclient.hincrby(mkKey(obj, 'byHOD'), date.hour(), 1);
 }
 
+function processDeowl(obj) {
+
+  var prefix = obj.success ? 'deowls' : 'deowlfails';
+
+  rclient.hincrby(mkKey(obj, prefix), obj.speaker, 1);
+
+}
+
 var getResults = function(callback) {
  var obj = {room:'general', server:'conference.friendshipismagicsquad.com'};
  rclient.multi()
@@ -152,6 +161,8 @@ var getResults = function(callback) {
    .hgetall(mkKey(obj, 'bySpeaker'))
    .hgetall(mkKey(obj, 'byHOD'))
    .get(mkKey(obj, 'total'))
+   .hgetall(mkKey(obj, 'deowls'))
+   .hgetall(mkKey(obj, 'deowlfails'))
    .exec(function(err, replies) {
      if (err) {
        callback(err);
@@ -167,6 +178,8 @@ var getResults = function(callback) {
         bySpeaker: top(10, replies[6]),
         byHOD: replies[7],
         total: replies[8],
+        deowls: top(10, replies[9]),
+        deowlfails: top(10, replies[10]),
       };
       callback(false, result);
      }
