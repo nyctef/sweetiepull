@@ -162,7 +162,7 @@ function processDeowl(obj) {
 }
 
 var getResults = function(callback) {
- var obj = {room:'general', server:'conference.friendshipismagicsquad.com'};
+ var obj = {room:config.jabber_room, server:config.jabber_server};
  rclient.multi()
    .lrange(mkKey(obj,'tail'), 0, 99)
    .get(mkKey(obj, 'lunabehs'))
