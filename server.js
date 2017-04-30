@@ -27,20 +27,19 @@ rclient.on("error", function(err) {
   console.log("Redis error " + err);
 });
 
-var sbAccountKey = fs.readFileSync('sb_account_key.txt', {encoding:'utf8'}).trim();
-var sbservice = azure.createServiceBusService('jabber-fimsquad', sbAccountKey,
-    'owner');
-
 var log = function() {
   console.log(arguments);
 }
 
-log(sbAccountKey);
-log(sbservice);
+var config = require('./config');
+log("Config: ", config);
+var sbservice = azure.createServiceBusService(config.sb_namespace,
+                                              config.sb_account_key,
+                                              config.sb_issuer);
 
 var askForNext = function() {
   log('asking for next message ..');
-  sbservice.receiveSubscriptionMessage('chat-general', 'sweetiepull', 
+  sbservice.receiveSubscriptionMessage(config.sb_topic, 'sweetiepull', 
       {isPeekLock: true, timeoutIntervalInS:99999999999}, callback);
 }
 

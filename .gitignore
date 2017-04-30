@@ -1,3 +1,4 @@
-*sb_account_key.txt
+config.js
 node_modules/*
 *.swp
+

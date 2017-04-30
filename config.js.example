@@ -1,0 +1,8 @@
+var config = {};
+
+config.sb_account_key = 'xxxxxxxxxxx';
+config.sb_issuer = 'owner';
+config.sb_namespace = 'jabber-messages';
+config.sb_topic = 'test-topic';
+
+module.exports = config;
