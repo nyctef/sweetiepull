@@ -22,7 +22,7 @@ http.createServer(function (req, res) {
 }).listen(3000, "127.0.0.1");
 console.log('Server running at http://127.0.0.1:3000/');
 
-var rclient = redis.createClient();
+var rclient = redis.createClient({host: 'spredis'});
 rclient.on("error", function(err) {
   console.log("Redis error " + err);
 });
