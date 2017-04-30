@@ -31,8 +31,8 @@ var sbAccountKey = fs.readFileSync('sb_account_key.txt', {encoding:'utf8'}).trim
 var sbservice = azure.createServiceBusService('jabber-fimsquad', sbAccountKey,
     'owner');
 
-var log = function(msg) {
-  console.log(msg);
+var log = function() {
+  console.log(arguments);
 }
 
 log(sbAccountKey);
@@ -41,7 +41,7 @@ log(sbservice);
 var askForNext = function() {
   log('asking for next message ..');
   sbservice.receiveSubscriptionMessage('chat-general', 'sweetiepull', 
-      {timeoutIntervalInS:99999999999}, callback);
+      {isPeekLock: true, timeoutIntervalInS:99999999999}, callback);
 }
 
 var callback = function(err, message) {
@@ -51,13 +51,25 @@ var callback = function(err, message) {
       setTimeout(askForNext, 5000);
       return;
     }
-    log("Error on subscription: "+err);
+    log("Error on subscription: ",err);
     setTimeout(askForNext, 60*1000);
     return;
   }
-
-  log(message);
-  process(message);
+  try {
+    log("incoming message", message);
+    process(message);
+    sbservice.deleteMessage(message, function(err, response) {
+      // not sure what to do on error here?
+    });
+    log("processed message");
+  }
+  catch (e) {
+    log("failed to process message", e);
+    // we failed to process the message, so mark it as unread
+    sbservice.unlockMessage(message, function(err, response) {
+      // not sure what could be done here
+    });
+  }
   askForNext();
 }
 
@@ -69,8 +81,8 @@ var process = function(msg) {
     obj = JSON.parse(msg.body);
   }
   catch (e) {
-    log('could not parse: '+e);
-    return;
+    log('could not parse: ',e);
+    throw e;
   }
 
   if (obj.message) processMessage(obj);
