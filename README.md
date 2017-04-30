@@ -1,8 +1,9 @@
 basic running:
 
 ```
-npm install node azure redis
-cat '[azure service bus key]' > sb_account_key.txt
+npm install
+cp config.js.example config.js
+edit config.js
 nodejs server.js
 ```
 
