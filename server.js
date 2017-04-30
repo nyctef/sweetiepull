@@ -6,6 +6,9 @@ var azure = require('azure');
 var fs = require('fs');
 var moment = require('moment');
 
+var log = function() {
+  console.log(...arguments);
+}
 
 http.createServer(function (req, res) {
   log('incoming web request');
@@ -25,12 +28,8 @@ console.log('Server running at http://127.0.0.1:3000/');
 
 var rclient = redis.createClient({host: 'spredis'});
 rclient.on("error", function(err) {
-  console.log("Redis error " + err);
+  log("Redis error " + err);
 });
-
-var log = function() {
-  console.log(...arguments);
-}
 
 var config = require('./config');
 log("Config: ", config);
@@ -58,8 +57,9 @@ var callback = function(err, message) {
   try {
     log("incoming message", message);
     process(message);
+    log("requesting message delete");
     sbservice.deleteMessage(message, function(err, response) {
-      // not sure what to do on error here?
+      log("message delete result", "err", err || 'none', "response", response || 'none');
     });
     log("processed message");
   }
@@ -67,7 +67,7 @@ var callback = function(err, message) {
     log("failed to process message", e);
     // we failed to process the message, so mark it as unread
     sbservice.unlockMessage(message, function(err, response) {
-      // not sure what could be done here
+      log("message unlock result", "err", err || 'none', "response", response || 'none');
     });
   }
   askForNext();
