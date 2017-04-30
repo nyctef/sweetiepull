@@ -28,7 +28,7 @@ rclient.on("error", function(err) {
 });
 
 var log = function() {
-  console.log(arguments);
+  console.log(...arguments);
 }
 
 var config = require('./config');
