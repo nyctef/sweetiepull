@@ -8,6 +8,7 @@ var moment = require('moment');
 
 
 http.createServer(function (req, res) {
+  log('incoming web request');
   res.writeHead(200, {'Content-Type': 'application/json'});
   getResults(function(err, results) {
     var obj;
@@ -19,7 +20,7 @@ http.createServer(function (req, res) {
     }
     res.end(JSON.stringify(obj, null, " "));
   });
-}).listen(3000, "127.0.0.1");
+}).listen(3000, "0.0.0.0");
 console.log('Server running at http://127.0.0.1:3000/');
 
 var rclient = redis.createClient({host: 'spredis'});
