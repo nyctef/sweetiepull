@@ -2,6 +2,7 @@ version: '3'
 services:
     sweetiepull:
         build: .
+        image: sweetiepull
         ports:
             - "${PORT}:3000"
     spredis:

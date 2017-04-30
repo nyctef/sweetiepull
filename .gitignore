@@ -2,4 +2,6 @@ config.js
 node_modules/*
 *.swp
 *.rdb
+*.tar
+*.zip
 
