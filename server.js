@@ -10,22 +10,6 @@ var log = function() {
   console.log(...arguments);
 }
 
-http.createServer(function (req, res) {
-  log('incoming web request');
-  res.writeHead(200, {'Content-Type': 'application/json'});
-  getResults(function(err, results) {
-    var obj;
-    if (err) {
-      obj = { error: err };
-    }
-    else {
-      obj = results;
-    }
-    res.end(JSON.stringify(obj, null, " "));
-  });
-}).listen(3000, "0.0.0.0");
-console.log('Server running at http://127.0.0.1:3000/');
-
 var rclient = redis.createClient({host: 'spredis'});
 rclient.on("error", function(err) {
   log("Redis error " + err);
@@ -37,26 +21,26 @@ var sbservice = azure.createServiceBusService(config.sb_namespace,
                                               config.sb_account_key,
                                               config.sb_issuer);
 
-var askForNext = function() {
+var askForNextServiceBusMessage = function() {
   log('asking for next message ..');
   sbservice.receiveSubscriptionMessage(config.sb_topic, 'sweetiepull', 
-      {isPeekLock: true, timeoutIntervalInS:99999999999}, callback);
+      {isPeekLock: true, timeoutIntervalInS:99999999999}, onServiceBusMessage);
 }
 
-var callback = function(err, message) {
+var onServiceBusMessage = function(err, message) {
   if (err) {
     if (err == 'No messages to receive') {
       log(err);
-      setTimeout(askForNext, 5000);
+      setTimeout(askForNextServiceBusMessage, 5000);
       return;
     }
     log("Error on subscription: ",err);
-    setTimeout(askForNext, 60*1000);
+    setTimeout(askForNextServiceBusMessage, 60*1000);
     return;
   }
   try {
     log("incoming message", message);
-    process(message);
+    processMessage(message);
     log("requesting message delete");
     sbservice.deleteMessage(message, function(err, response) {
       log("message delete result", "err", err || 'none', "response", response || 'none');
@@ -70,12 +54,12 @@ var callback = function(err, message) {
       log("message unlock result", "err", err || 'none', "response", response || 'none');
     });
   }
-  askForNext();
+  askForNextServiceBusMessage();
 }
 
-askForNext();
+askForNextServiceBusMessage();
 
-var process = function(msg) { 
+var processMessage = function(msg) { 
   var obj;
   try {
     obj = JSON.parse(msg.body);
@@ -85,7 +69,7 @@ var process = function(msg) {
     throw e;
   }
 
-  if (obj.message) processMessage(obj);
+  if (obj.message) processChatMessage(obj);
   if (obj.deowl) processDeowl(obj);
 }
 
@@ -93,15 +77,15 @@ var mkKey = function(obj, postfix) {
   return obj.server +':'+obj.room+':'+postfix;
 }
 
-var processMessage = function(obj) {
+var processChatMessage = function(obj) {
 
   if (!obj.room || !obj.speaker || !obj.message || !obj.timestamp || !obj.server) {
-    log('processMessage: some properties not found, discarding');
+    log('processChatMessage: some properties not found, discarding');
     return;
   }
 
   if (obj.speaker.length == 0) {
-    log('processMessage: ignoring string with no length');
+    log('processChatMessage: ignoring string with no length');
     return;
   }
 
@@ -158,8 +142,24 @@ function processDeowl(obj) {
   var prefix = obj.success ? 'deowls' : 'deowlfails';
 
   rclient.hincrby(mkKey(obj, prefix), obj.speaker, 1);
-
 }
+
+http.createServer(function (req, res) {
+  log('incoming web request');
+  res.writeHead(200, {'Content-Type': 'application/json'});
+  getResults(function(err, results) {
+    var obj;
+    if (err) {
+      obj = { error: err };
+    }
+    else {
+      obj = results;
+    }
+    res.end(JSON.stringify(obj, null, " "));
+  });
+}).listen(3000, "0.0.0.0");
+
+console.log('Server running at http://0.0.0.0:3000/');
 
 var getResults = function(callback) {
  var obj = {room:config.jabber_room, server:config.jabber_server};
