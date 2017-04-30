@@ -1,0 +1,11 @@
+version: '3'
+services:
+    sweetiepull:
+        build: .
+        ports:
+            - "${PORT}:3000"
+    spredis:
+        image: 'redis'
+        volumes:
+            - './data:/data'
+
